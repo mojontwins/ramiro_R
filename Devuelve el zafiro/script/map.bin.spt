@@ -1,0 +1,64 @@
+ENTERING SCREEN 2
+	IF TRUE
+	THEN
+		DECORATIONS
+			4, 7, 30
+			4, 8, 31
+		END
+	END
+END
+ 
+ENTERING SCREEN 5
+	IF TRUE
+	THEN
+		DECORATIONS
+			5, 6, 26
+		END
+	END
+END
+ 
+ENTERING SCREEN 13
+	IF TRUE
+	THEN
+		DECORATIONS
+			5, 2, 26
+		END
+	END
+END
+ 
+ENTERING SCREEN 18
+	IF TRUE
+	THEN
+		DECORATIONS
+			5, 8, 26
+		END
+	END
+END
+ 
+ENTERING SCREEN 25
+	IF TRUE
+	THEN
+		DECORATIONS
+			4, 4, 25
+		END
+	END
+END
+ 
+ENTERING SCREEN 29
+	IF TRUE
+	THEN
+		DECORATIONS
+			10, 8, 26
+		END
+	END
+END
+ 
+ 
+// If you use extraprints.h, trim this bit and use it!
+const unsigned char ep_scr_02 [] = { 0x47, 30, 0x48, 31 };
+const unsigned char ep_scr_05 [] = { 0x56, 26 };
+const unsigned char ep_scr_0D [] = { 0x52, 26 };
+const unsigned char ep_scr_12 [] = { 0x58, 26 };
+const unsigned char ep_scr_19 [] = { 0x44, 25 };
+const unsigned char ep_scr_1D [] = { 0xA8, 26 };
+const unsigned char *prints [] = { 0, 0, ep_scr_02, 0, 0, ep_scr_05, 0, 0, 0, 0, 0, 0, 0, ep_scr_0D, 0, 0, 0, 0, ep_scr_12, 0, 0, 0, 0, 0, 0, ep_scr_19, 0, 0, 0, ep_scr_1D };

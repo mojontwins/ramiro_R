@@ -1,0 +1,625 @@
+# Some flags.
+# Will be using aliases, of course, but I need to keep track of these
+# as they are referenced by number in the engine. So...
+
+# 1  - Crosses counter (crosses = tile get)
+# 2  - 
+# 29 - Enable custom hack to turn empty enemy slots in type 6s
+# 30 - Kill slowly (Evil Zone in the original) is ON
+# 31 - Fanties Numb flag, Fanties don't move if it's 0
+
+# Externs:
+# 1-30 are reserved by the engine to display level names.
+# 31-N are for game text.
+
+# Some aliases
+
+DEFALIAS
+	# All purpose
+	$ALLPURP				0
+
+	# Crosses (TILE_GET)
+	$CROSSES 				1
+
+	# Game state. Somewhat more complex than originally
+	# 0 -> Initial
+	# 1 -> "Go talk with Gonzalo"
+	# 2 -> Already talked to Gonzalo
+	# 3 -> Talisman pieces on fire!
+	$GAME_STATE				2
+
+	# Traps are activated
+	$TRAP_ON				3
+
+	# Puzzle pieces
+	$ENCANTAMIENTO_PIMIENTO	10
+	$TALISMAN_PIECES		11
+	# Talisman_N = 0->No, 1->Crushed, 2->Taken
+	$TALISMAN_1				12
+	$TALISMAN_2				13
+	$TALISMAN_3				14
+	$TALISMAN_4				15
+
+	# Coordenadas de la compuerta
+	$GATE_X					20
+	$GATE_Y 				21
+
+	# Modify the engine behaviour...
+	$MAKE_TYPE_6 			29
+	$HECHIZO_POSTIZO 		30
+	$MURCIELAGO_ON 			31
+END
+
+# Decorations
+
+INC_DECORATIONS map.bin.spt
+
+# Do
+
+ENTERING GAME
+	IF TRUE
+	THEN
+		# Don't forget to enable CLEAR_FLAGS in config.h!
+
+		# Debug
+		# SET $TALISMAN_PIECES = 4
+		# SET $HECHIZO_POSTIZO = 1
+		# SET $GAME_STATE = 3
+		# SET $MAKE_TYPE_6 = 1
+		# SET $TRAP_ON = 1
+		# WARP_TO 6, 7, 4
+	END 
+END
+
+ENTERING ANY
+	IF $MAKE_TYPE_6 = 1
+	THEN
+		SET $MURCIELAGO_ON = 1
+	END
+END
+
+PLAYER_GETS_COIN
+	# Whenever you get a coin, gain 1 point of life
+	IF TRUE
+	THEN
+		INC LIFE 1
+	END
+
+	# Got all CROSSES?
+	IF $CROSSES = 20
+	THEN
+		SOUND 8
+		# DISABLE_TYPE_6
+		SET $MURCIELAGO_ON = 0
+		SET TILE (#$GATE_X, #$GATE_Y) = 0
+		EXTERN 69
+	END
+
+	IF $CROSSES = 20
+	IF $TALISMAN_PIECES = 4
+	THEN
+		SET $GAME_STATE = 3
+		EXTERN 71
+		EXTERN 72
+		EXTERN 73
+		EXTERN 74
+		SET $MAKE_TYPE_6 = 1
+	END
+
+	IF $CROSSES = 20
+	THEN
+		SET $CROSSES = 0
+	END
+END
+
+# Gonzalo, el malo
+
+PRESS_FIRE AT SCREEN 2
+	IF PLAYER_IN_X 48, 96
+	IF $GAME_STATE = 1
+	THEN
+		SET $GAME_STATE = 2
+		SET $TRAP_ON = 1
+		EXTERN 57
+		EXTERN 58
+		EXTERN 59
+		EXTERN 60
+		EXTERN 61
+		EXTERN 62
+		BREAK
+	END
+
+	IF PLAYER_IN_X 48, 96
+	IF $TALISMAN_PIECES = 4
+	THEN
+		EXTERN 65
+		EXTERN 66
+		EXTERN 67
+		EXTERN 68
+		WIN GAME
+	END
+
+	IF PLAYER_IN_X 48, 96
+	THEN
+		EXTERN 63
+		EXTERN 64
+		BREAK
+	END
+END
+
+# Crypt 4
+
+ENTERING SCREEN 5
+	IF $TALISMAN_4 = 2
+	THEN
+		SET TILE (5, 5) = 20
+	END
+
+	IF $TALISMAN_4 = 1
+	THEN
+		EXTERN 70
+	END
+END
+
+PRESS_FIRE AT SCREEN 5
+	IF PLAYER_TOUCHES 5, 6
+	IF $TALISMAN_4 = 1
+	THEN
+		# SHOW COINS
+		DECORATIONS
+			1, 2, 45
+			2, 2, 45
+			3, 2, 45
+			4, 2, 45
+			5, 2, 45
+			6, 2, 45
+			9, 4, 45
+			10, 4, 45
+			11, 4, 45
+			12, 4, 45
+			13, 4, 45
+			5, 8, 45
+			6, 8, 45
+			7, 8, 45
+			8, 8, 45
+			9, 8, 45
+			10, 8, 45
+			11, 8, 45
+			12, 8, 45
+			13, 8, 45
+		END
+		# ENABLE_TYPE 6
+		SET $MURCIELAGO_ON = 1
+		# CLOSE GATE, PAINT TALISMAN
+		SET TILE (5, 5) = 20
+		SET TILE (14, 6) = 16
+		SET $GATE_X = 14
+		SET $GATE_Y = 6
+		INC $TALISMAN_PIECES, 1
+		SET $TALISMAN_4 = 2
+		SHOW
+		SOUND 6
+	END
+END
+
+# El deforme de Uniforme
+
+ENTERING SCREEN 6
+	IF $TRAP_ON = 1
+	THEN
+		SET TILE (5, 8) = 29
+	END
+
+	IF $TALISMAN_4 = 0
+	THEN
+		SET TILE (4, 1) = 13
+		SET TILE (4, 2) = 24
+	END
+END
+
+PRESS_FIRE AT SCREEN 6
+	IF $TRAP_ON = 1
+	IF $TALISMAN_4 = 0
+	IF PLAYER_TOUCHES 5, 8
+	THEN
+		SOUND 8
+		SET TILE (4, 1) = 28
+		SHOW
+		SOUND 3
+		SOUND 4
+		SET TILE (4, 1) = 27
+		SET TILE (4, 2) = 28
+		SHOW
+		SOUND 10
+		SET TILE (4, 1) = 28
+		SET TILE (4, 2) = 0
+		SHOW
+		SOUND 3
+		SOUND 4
+		SET TILE (4, 1) = 0
+		SHOW
+		SOUND 3
+		SOUND 4
+		SET $TALISMAN_4 = 1
+	END
+
+	IF $TALISMAN_4 = 0
+	IF PLAYER_TOUCHES 4, 2
+	THEN
+		EXTERN 54
+		EXTERN 55
+		EXTERN 56
+	END
+END
+
+# Roberta, la muerta
+
+ENTERING SCREEN 12
+	IF $TRAP_ON = 1
+	THEN
+		SET TILE (13, 1) = 29
+	END
+
+	IF $TALISMAN_3 = 0
+	THEN
+		SET TILE (13, 3) = 13
+		SET TILE (13, 4) = 23
+	END
+END
+
+PRESS_FIRE AT SCREEN 12
+	IF $TRAP_ON = 1
+	IF $TALISMAN_3 = 0
+	IF PLAYER_TOUCHES 13, 1
+	THEN
+		SOUND 8
+		SET TILE (13, 3) = 28
+		SHOW
+		SOUND 3
+		SOUND 4
+		SET TILE (13, 3) = 27
+		SET TILE (13, 4) = 28
+		SHOW
+		SOUND 10
+		SET TILE (13, 3) = 28
+		SET TILE (13, 4) = 0
+		SHOW
+		SOUND 3
+		SOUND 4
+		SET TILE (13, 3) = 0
+		SHOW
+		SOUND 3
+		SOUND 4
+		SET $TALISMAN_3 = 1
+	END
+
+	IF $TALISMAN_3 = 0
+	IF PLAYER_TOUCHES 13, 4
+	THEN
+		EXTERN 51
+		EXTERN 52
+		EXTERN 53
+	END
+END
+
+# Crypt 3
+
+ENTERING SCREEN 13
+	IF $TALISMAN_3 = 2
+	THEN
+		SET TILE (5, 1) = 19
+	END
+
+	IF $TALISMAN_3 = 1
+	THEN
+		EXTERN 70
+	END
+END
+
+PRESS_FIRE AT SCREEN 13
+	IF PLAYER_TOUCHES 5, 2
+	IF $TALISMAN_3 = 1
+	THEN
+		# SHOW COINS
+		DECORATIONS
+			12, 1, 45
+			13, 1, 45
+			12, 2, 45
+			13, 2, 45
+			12, 3, 45
+			13, 3, 45
+			12, 4, 45
+			13, 4, 45
+			12, 5, 45
+			13, 5, 45
+			1, 6, 45
+			2, 6, 45
+			4, 6, 45
+			5, 6, 45
+			6, 6, 45
+			1, 8, 45
+			2, 8, 45
+			4, 8, 45
+			5, 8, 45
+			6, 8, 45
+		END
+		# ENABLE_TYPE 6
+		SET $MURCIELAGO_ON = 1
+		# CLOSE GATE, PAINT TALISMAN
+		SET TILE (5, 1) = 19
+		SET TILE (0, 4) = 16
+		SET $GATE_X = 0
+		SET $GATE_Y = 4
+		INC $TALISMAN_PIECES, 1
+		SET $TALISMAN_3 = 2
+		SHOW
+		SOUND 6
+	END
+END
+
+# Fritz, el Bancario Ario
+
+ENTERING SCREEN 17
+	IF $TRAP_ON = 1
+	THEN
+		SET TILE (9, 2) = 29
+	END
+
+	IF $TALISMAN_2 = 0
+	THEN
+		SET TILE (11, 7) = 13
+		SET TILE (11, 8) = 22
+	END
+END
+
+PRESS_FIRE AT SCREEN 17
+	IF $TRAP_ON = 1
+	IF $TALISMAN_2 = 0
+	IF PLAYER_TOUCHES 9, 2
+	THEN
+		SOUND 8
+		SET TILE (11, 7) = 28
+		SHOW
+		SOUND 3
+		SOUND 4
+		SET TILE (11, 7) = 27
+		SET TILE (11, 8) = 28
+		SHOW
+		SOUND 10
+		SET TILE (11, 7) = 28
+		SET TILE (11, 8) = 0
+		SHOW
+		SOUND 3
+		SOUND 4
+		SET TILE (11, 7) = 0
+		SHOW
+		SOUND 3
+		SOUND 4
+		SET $TALISMAN_2 = 1
+	END
+
+	IF $TALISMAN_2 = 0
+	IF PLAYER_TOUCHES 11, 8
+	THEN
+		EXTERN 47
+		EXTERN 48
+		EXTERN 49
+		EXTERN 50
+	END
+END
+
+# Crypt 2
+
+ENTERING SCREEN 18
+	IF $TALISMAN_2 = 2
+	THEN
+		SET TILE (5, 7) = 18
+	END
+
+	IF $TALISMAN_2 = 1
+	THEN
+		EXTERN 70
+	END
+END
+
+PRESS_FIRE AT SCREEN 18
+	IF PLAYER_TOUCHES 5, 8
+	IF $TALISMAN_2 = 1
+	THEN
+		# SHOW COINS
+		DECORATIONS
+			9, 2, 45
+			10, 2, 45
+			11, 2, 45
+			12, 2, 45
+			13, 2, 45
+			1, 3, 45
+			2, 3, 45
+			3, 3, 45
+			4, 3, 45
+			5, 3, 45
+			1, 5, 45
+			9, 5, 45
+			10, 5, 45
+			2, 6, 45
+			8, 6, 45
+			11, 6, 45
+			3, 7, 45
+			7, 7, 45
+			12, 7, 45
+			4, 8, 45
+		END
+		# ENABLE_TYPE 6
+		SET $MURCIELAGO_ON = 1
+		# CLOSE GATE, PAINT TALISMAN
+		SET TILE (5, 7) = 18
+		SET TILE (0, 1) = 16
+		SET $GATE_X = 0
+		SET $GATE_Y = 1
+		INC $TALISMAN_PIECES, 1
+		SET $TALISMAN_2 = 2
+		SHOW
+		SOUND 6
+	END
+END
+
+# Initial screen
+
+ENTERING SCREEN 25
+	IF $FIRST_TIME = 0
+	THEN
+		SET_FIRE_ZONE_TILES 0, 0, 15, 9
+		BREAK
+	END
+	
+END
+
+PRESS_FIRE AT SCREEN 25
+	IF $FIRST_TIME = 0
+	THEN
+		SET $FIRST_TIME = 1
+		EXTERN 31
+		EXTERN 32
+		REENTER
+	END
+
+	IF PLAYER_TOUCHES 4, 4
+	IF $GAME_STATE = 0
+	THEN
+		EXTERN 33
+		EXTERN 34
+		EXTERN 35
+		EXTERN 36
+		EXTERN 37
+		EXTERN 38
+		EXTERN 39
+		EXTERN 40
+		SET $GAME_STATE = 1
+		SET $HECHIZO_POSTIZO = 1
+		BREAK
+	END
+
+	IF PLAYER_TOUCHES 4, 4
+	IF $GAME_STATE = 1
+	THEN
+		EXTERN 41
+		BREAK
+	END
+
+	IF PLAYER_TOUCHES 4, 4
+	IF $GAME_STATE = 2
+	THEN
+		EXTERN 42
+		BREAK
+	END
+
+	IF PLAYER_TOUCHES 4, 4
+	THEN
+		EXTERN 43
+	END
+END
+
+# Rufino el marino
+
+ENTERING SCREEN 28
+	IF $TRAP_ON = 1
+	THEN
+		SET TILE (12, 5) = 29
+	END
+
+	IF $TALISMAN_1 = 0
+	THEN
+		SET TILE (11, 7) = 13
+		SET TILE (11, 8) = 21
+	END
+END
+
+PRESS_FIRE AT SCREEN 28
+	IF $TRAP_ON = 1
+	IF $TALISMAN_1 = 0
+	IF PLAYER_TOUCHES 12, 5
+	THEN
+		SOUND 8
+		SET TILE (11, 7) = 28
+		SHOW
+		SOUND 3
+		SOUND 4
+		SET TILE (11, 7) = 27
+		SET TILE (11, 8) = 28
+		SHOW
+		SOUND 10
+		SET TILE (11, 7) = 28
+		SET TILE (11, 8) = 0
+		SHOW
+		SOUND 3
+		SOUND 4
+		SET TILE (11, 7) = 0
+		SHOW
+		SOUND 3
+		SOUND 4
+		SET $TALISMAN_1 = 1
+	END
+
+	IF $TALISMAN_1 = 0
+	IF PLAYER_TOUCHES 11, 8
+	THEN
+		EXTERN 44
+		EXTERN 45
+		EXTERN 46
+	END
+END
+
+# Crypt 1
+
+ENTERING SCREEN 29
+	IF $TALISMAN_1 = 2
+	THEN
+		SET TILE (10, 7) = 17
+	END
+
+	IF $TALISMAN_1 = 1
+	THEN
+		EXTERN 70
+	END
+END
+
+PRESS_FIRE AT SCREEN 29
+	IF PLAYER_TOUCHES 10, 8
+	IF $TALISMAN_1 = 1
+	THEN
+		# SHOW COINS
+		DECORATIONS
+			3, 2, 45
+			12, 2, 45
+			13, 2, 45
+			7, 3, 45
+			8, 3, 45
+			12, 3, 45
+			13, 3, 45
+			6, 4, 45
+			9, 4, 45
+			12, 4, 45
+			13, 4, 45
+			12, 5, 45
+			13, 5, 45
+			1, 6, 45
+			2, 6, 45
+			3, 6, 45
+			4, 6, 45
+			5, 6, 45
+			12, 6, 45
+			13, 6, 45
+		END
+		# ENABLE_TYPE 6
+		SET $MURCIELAGO_ON = 1
+		# CLOSE GATE, PAINT TALISMAN
+		SET TILE (10, 7) = 17
+		SET TILE (0, 8) = 16
+		SET $GATE_X = 0
+		SET $GATE_Y = 8
+		INC $TALISMAN_PIECES, 1
+		SET $TALISMAN_1 = 2
+		SHOW
+		SOUND 6
+	END
+END

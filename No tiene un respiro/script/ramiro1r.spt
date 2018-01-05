@@ -1,0 +1,636 @@
+# Some flags.
+# Will be using aliases, of course, but I need to keep track of these
+# as they are referenced by number in the engine. So...
+
+# 1  - Crosses counter (crosses = tile get)
+# 2  - 
+# 30 - Kill slowly (Evil Zone in the original) is ON
+# 31 - Fanties Numb flag, Fanties don't move if it's 0
+
+# Externs:
+# 1-30 are reserved by the engine to display level names.
+# 31-N are for game text.
+
+# Some aliases
+
+DEFALIAS
+	# All purpose
+	$ALLPURP				0
+
+	# Crosses (TILE_GET)
+	$CROSSES 				1
+
+	# For a text the first time we enter screen 7
+	$FIRST_TIME				2
+
+	# Ramiro noticing talisman pieces
+	$TALISMAN_SAYING		3
+
+	# 'Got everything' warning
+	$GOT_EVERYTHING_WARNING	9
+
+	# Puzzle pieces
+	$ENCANTAMIENTO_PIMIENTO	10
+	$TALISMAN_PIECES		11
+	$TALISMAN_1				12
+	$TALISMAN_2				13
+	$TALISMAN_3				14
+	$TALISMAN_4				15
+	$TESORO_MORO			16
+	$CANIJA_GONE			17
+
+	# Coordenadas de la compuerta
+	$GATE_X					20
+	$GATE_Y 				21
+
+	# Modify the engine behaviour...
+	$HECHIZO_POSTIZO 		30
+	$MURCIELAGO_ON 			31
+END
+
+# Decorations
+
+INC_DECORATIONS map.bin.spt
+
+# Do
+
+ENTERING GAME
+	IF TRUE
+	THEN
+		# Don't forget to enable CLEAR_FLAGS in config.h!
+
+		# Debug
+		# SET $TALISMAN_PIECES = 4
+		# SET $HECHIZO_POSTIZO = 1
+		# WARP_TO 8, 4, 4
+	END 
+END
+
+PLAYER_GETS_COIN
+	# Whenever you get a coin, gain 1 point of life
+	IF TRUE
+	THEN
+		INC LIFE 1
+	END
+
+	# Got all CROSSES?
+	IF $CROSSES = 20
+	THEN
+		SOUND 8
+		# DISABLE_TYPE_6
+		SET $MURCIELAGO_ON = 0
+		SET TILE (#$GATE_X, #$GATE_Y) = 0
+		EXTERN 49
+	END
+
+	IF $CROSSES = 20
+	IF $TALISMAN_PIECES = 4
+	IF $GOT_EVERYTHING_WARNING = 0
+	THEN
+		SET $GOT_EVERYTHING_WARNING = 1
+		EXTERN 59
+		EXTERN 60
+	END
+
+	IF $CROSSES = 20
+	THEN
+		SET $CROSSES = 0
+	END
+END
+
+# Cripta del Sirviente Vicente
+
+PRESS_FIRE AT SCREEN 2
+	IF PLAYER_TOUCHES 9, 7
+	THEN
+		EXTERN 58
+	END
+END
+
+# Cripta del Enano Marrano
+
+PRESS_FIRE AT SCREEN 4
+	IF PLAYER_TOUCHES 10, 4
+	THEN
+		EXTERN 54
+		EXTERN 55
+		EXTERN 56
+		EXTERN 57
+	END
+END
+
+# Screen 6.
+# Will detect Ramiro going outside and place a warning
+# about doing so.
+
+ENTERING SCREEN 6
+	IF TRUE
+	THEN
+		SET $ALLPURP = 0
+	END
+
+	# Create fire zone
+	IF $HECHIZO_POSTIZO = 0
+	THEN
+		SET_FIRE_ZONE 208, 128, 212, 143
+	END
+END
+
+PRESS_FIRE AT SCREEN 6
+	IF $HECHIZO_POSTIZO = 0
+	IF $ALLPURP = 0
+	IF PLAYER_TOUCHES 13, 8
+	THEN
+		SET $ALLPURP = 1
+		EXTERN 36
+	END
+END
+
+# Initial screen
+
+ENTERING SCREEN 7
+	IF TRUE
+	THEN
+		SET $ALLPURP = 0
+	END
+
+	IF $FIRST_TIME = 0
+	THEN
+		SET_FIRE_ZONE_TILES 0, 0, 15, 9
+		BREAK
+	END
+
+	IF $CANIJA_GONE = 0
+	THEN
+		SET TILE (4, 4) = 27
+		SET_FIRE_ZONE_TILES 5, 4, 5, 4
+	END
+
+	IF $CANIJA_GONE = 1
+	THEN
+		SET_FIRE_ZONE_TILES 2, 3, 2, 4
+	END
+END
+
+PRESS_FIRE AT SCREEN 7
+	IF $FIRST_TIME = 0
+	THEN
+		SET $FIRST_TIME = 1
+		SET_FIRE_ZONE 0, 0, 0, 0
+		EXTERN 31
+		EXTERN 32
+		EXTERN 33
+		REENTER
+	END
+
+	IF PLAYER_TOUCHES 5, 4
+	IF $CANIJA_GONE = 0
+	IF $TESORO_MORO = 0
+	IF $ALLPURP = 0
+	THEN
+		SET $ALLPURP = 1
+		EXTERN 34		
+		BREAK
+	END
+
+	IF PLAYER_TOUCHES 5, 4
+	IF $CANIJA_GONE = 0
+	IF $TESORO_MORO = 1
+	THEN
+		EXTERN 68
+		EXTERN 69
+		SET TILE (4, 4) = 0
+		SHOW
+		SOUND 6
+		SOUND 5
+		EXTERN 70
+		SET_FIRE_ZONE_TILES 2, 3, 2, 4
+		SET $CANIJA_GONE = 1
+		BREAK
+	END
+
+	IF PLAYER_TOUCHES 2, 4
+	THEN
+		SOUND 8
+		WIN GAME
+	END
+END
+
+# Screen 8
+# Will detect Ramiro going outside and place a warning
+# about doing so.
+
+ENTERING SCREEN 8
+	IF TRUE
+	THEN
+		SET $ALLPURP = 0
+	END
+
+	# Create fire zone
+	IF $HECHIZO_POSTIZO = 0
+	THEN
+		SET_FIRE_ZONE_TILES 9, 8, 9, 8
+	END
+
+	IF $ENCANTAMIENTO_PIMIENTO = 1
+	THEN
+		DECORATIONS
+			5, 4, 17
+			6, 4, 18
+			5, 5, 19
+			6, 5, 20
+		END
+	END
+END
+
+PRESS_FIRE AT SCREEN 8
+	# Warn about the perils of going out.
+	IF $HECHIZO_POSTIZO = 0
+	IF $ALLPURP = 0
+	IF PLAYER_TOUCHES 9, 8
+	THEN
+		SET $ALLPURP = 1
+		EXTERN 36
+	END
+
+	# Hechizo postizo
+	IF PLAYER_IN_Y_TILES 5, 5
+	IF PLAYER_IN_X_TILES 6, 7
+	IF $HECHIZO_POSTIZO = 0
+	THEN
+		EXTERN 37
+		EXTERN 38
+		EXTERN 39
+		EXTERN 40
+		EXTERN 41
+		EXTERN 42
+		EXTERN 43
+		EXTERN 44
+		EXTERN 45
+		SET $HECHIZO_POSTIZO = 1
+		BREAK
+	END
+
+	# Encantamiento del Pimiento
+	IF PLAYER_IN_Y_TILES 5, 5
+	IF PLAYER_IN_X_TILES 6, 7
+	IF $ENCANTAMIENTO_PIMIENTO = 0
+	IF $TALISMAN_PIECES = 4
+	THEN
+		EXTERN 61
+		EXTERN 62
+		EXTERN 63
+		PAUSE 50
+		SET TILE (5, 4) = 17
+		SHOW
+		SOUND 2
+		PAUSE 10
+		SET TILE (6, 4) = 18
+		SHOW
+		SOUND 2
+		PAUSE 10
+		SET TILE (5, 5) = 19
+		SHOW
+		SOUND 2
+		PAUSE 10
+		SET TILE (6, 5) = 20
+		SHOW
+		SOUND 2 
+		PAUSE 10
+		SOUND 5
+		SOUND 5
+		PAUSE 50
+		EXTERN 64
+		EXTERN 65
+		SET $ENCANTAMIENTO_PIMIENTO = 1
+		BREAK
+	END
+END
+
+# Cripta de Juanillo el Colmillo
+
+PRESS_FIRE AT SCREEN 11
+	IF PLAYER_TOUCHES 10, 8
+	THEN
+		EXTERN 46
+		EXTERN 47
+		EXTERN 48
+	END
+END
+
+# Cripta del Gigante Elegante
+
+PRESS_FIRE AT SCREEN 13
+	IF PLAYER_TOUCHES 12, 8
+	THEN
+		EXTERN 51
+		EXTERN 52
+	END
+END
+
+# La camara del tesoro del moro
+
+ENTERING SCREEN 14
+	IF $TESORO_MORO = 0
+	THEN
+		SET TILE (11, 2) = 28
+		SET_FIRE_ZONE_TILES 11, 2, 11, 2
+	END
+
+	# Close gate if $ENCANTAMIENTO_PIMIENTO = 0
+	IF $ENCANTAMIENTO_PIMIENTO = 0
+	THEN
+		SET TILE (10, 8) = 16
+		BREAK
+	END
+END
+
+PRESS_FIRE AT SCREEN 14
+	IF PLAYER_TOUCHES 11, 2
+	IF $TESORO_MORO = 0
+	THEN
+		SET_FIRE_ZONE 0, 0, 0, 0
+		SET $TESORO_MORO = 1
+		SET TILE (11, 2) = 0
+		EXTERN 66
+		SOUND 6
+		SOUND 6
+		SOUND 6
+		SOUND 6
+		SOUND 6
+		EXTERN 67
+	END
+END
+
+# Talismán 4!
+
+ENTERING SCREEN 15
+	IF $TALISMAN_4 = 0
+	THEN
+		SET TILE (8, 8) = 17
+		SET_FIRE_ZONE_TILES 8, 8, 8, 8
+		EXTERN 50
+	END
+END
+
+PRESS_FIRE AT SCREEN 15
+	IF $TALISMAN_4 = 0
+	IF PLAYER_TOUCHES 8, 8
+	THEN
+		SET $CROSSES = 0
+		SET $TALISMAN_4 = 1
+		INC $TALISMAN_PIECES, 1
+		# SHOW_COINS
+		DECORATIONS
+			1, 2, 13
+			2, 2, 13
+			3, 2, 13
+			4, 2, 13
+			8, 3, 13
+			9, 3, 13
+			10, 3, 13
+			11, 3, 13
+			12, 3, 13
+			13, 3, 13
+			1, 5, 13
+			2, 5, 13
+			3, 5, 13
+			8, 6, 13
+			9, 6, 13
+			10, 6, 13
+			2, 7, 13
+			4, 7, 13
+			6, 7, 13
+			12, 7, 13
+		END
+		# Close gate, remove object
+		SET TILE (14, 7) = 16
+		SET $GATE_X = 14
+		SET $GATE_Y = 7
+		SET TILE (8, 8) = 0
+		SHOW
+		# ENABLE_TYPE_6
+		SET $MURCIELAGO_ON = 1
+		SOUND 6
+
+		# This now delegates on PLAYER_GETS_COIN! see above.
+	END
+END
+
+# Talismán 3!
+
+ENTERING SCREEN 22
+	IF $TALISMAN_3 = 0
+	THEN
+		SET TILE (7, 8) = 17
+		SET_FIRE_ZONE_TILES 7, 8, 7, 8
+		EXTERN 50
+	END
+END
+
+PRESS_FIRE AT SCREEN 22
+	IF $TALISMAN_3 = 0
+	IF PLAYER_TOUCHES 7, 8
+	THEN
+		SET $CROSSES = 0
+		SET $TALISMAN_3 = 1
+		INC $TALISMAN_PIECES, 1
+		# SHOW_COINS
+		DECORATIONS
+			7, 2, 13
+			8, 2, 13
+			9, 2, 13
+			10, 2, 13
+			11, 2, 13
+			12, 2, 13
+			13, 2, 13
+			1, 4, 13
+			2, 4, 13
+			3, 4, 13
+			4, 4, 13
+			7, 6, 13
+			8, 6, 13
+			9, 6, 13
+			10, 6, 13
+			11, 6, 13
+			12, 6, 13
+			13, 6, 13
+			2, 7, 13
+			4, 7, 13
+		END
+		# Close gate, remove object
+		SET TILE (0, 2) = 16
+		SET $GATE_X = 0
+		SET $GATE_Y = 2
+		SET TILE (7, 8) = 0
+		SHOW
+		# ENABLE_TYPE_6
+		SET $MURCIELAGO_ON = 1
+		SOUND 6
+
+		# This now delegates on PLAYER_GETS_COIN! see above.
+	END
+END
+
+# Talismán 1!
+
+ENTERING SCREEN 23
+	IF $TALISMAN_1 = 0
+	THEN
+		SET TILE (12, 4) = 17
+		SET_FIRE_ZONE_TILES 12, 4, 12, 4
+		EXTERN 50
+	END
+END
+
+PRESS_FIRE AT SCREEN 23
+	IF $TALISMAN_1 = 0
+	IF PLAYER_TOUCHES 12, 4
+	THEN
+		SET $CROSSES = 0
+		SET $TALISMAN_1 = 1
+		INC $TALISMAN_PIECES, 1
+		# SHOW_COINS
+		DECORATIONS
+			1, 2, 13
+			2, 2, 13
+			3, 2, 13
+			1, 3, 13
+			2, 3, 13
+			3, 3, 13
+			1, 4, 13
+			2, 4, 13
+			3, 4, 13
+			1, 5, 13
+			2, 5, 13
+			3, 5, 13
+			1, 6, 13
+			2, 6, 13
+			3, 6, 13
+			9, 8, 13
+			10, 8, 13
+			11, 8, 13
+			12, 8, 13
+			13, 8, 13
+		END
+		# Close gate, remove object
+		SET TILE (14, 2) = 16
+		SET $GATE_X = 14
+		SET $GATE_Y = 2
+		SET TILE (12, 4) = 0
+		SHOW
+		# ENABLE_TYPE_6
+		SET $MURCIELAGO_ON = 1
+		SOUND 6
+
+		# This now delegates on PLAYER_GETS_COIN! see above.
+	END
+END
+
+# Talisman #2!
+
+ENTERING SCREEN 27
+	IF $TALISMAN_2 = 0
+	THEN
+		SET TILE (3, 2) = 17
+		SET_FIRE_ZONE_TILES 3, 2, 3, 2
+		EXTERN 50
+	END
+END
+
+PRESS_FIRE AT SCREEN 27
+	IF $TALISMAN_2 = 0
+	IF PLAYER_TOUCHES 3, 2
+	THEN
+		SET $CROSSES = 0
+		SET $TALISMAN_2 = 1
+		INC $TALISMAN_PIECES, 1
+		# SHOW_COINS
+		DECORATIONS
+			9, 2, 13
+			10, 2, 13
+			11, 2, 13
+			12, 2, 13
+			13, 2, 13
+			1, 3, 13
+			2, 3, 13
+			1, 4, 13
+			2, 4, 13
+			4, 4, 13
+			5, 4, 13
+			6, 4, 13
+			7, 4, 13
+			1, 5, 13
+			2, 5, 13
+			9, 6, 13
+			10, 6, 13
+			11, 6, 13
+			12, 6, 13
+			13, 6, 13
+		END
+		# Close gate, remove object
+		SET TILE (14, 8) = 16
+		SET $GATE_X = 14
+		SET $GATE_Y = 8
+		SET TILE (3, 2) = 0
+		SHOW
+		# ENABLE_TYPE_6
+		SET $MURCIELAGO_ON = 1
+		SOUND 6
+
+		# This now delegates on PLAYER_GETS_COIN! see above.
+	END
+END
+
+# It's a trap!
+
+ENTERING SCREEN 29
+	IF $TRAMPA = 0
+	THEN
+		SET_FIRE_ZONE_TILES 2, 0, 2, 9
+	END
+END
+
+PRESS_FIRE AT SCREEN 29
+	IF PLAYER_IN_X 17, 47
+	IF $TRAMPA = 0
+	THEN
+		EXTERN 53
+		REDRAW
+		SET $TRAMPA = 1
+		SET $CROSSES = 0
+		SET_FIRE_ZONE 0, 0, 0, 0
+		# SHOW_COINS
+		DECORATIONS
+			1, 2, 13
+			2, 2, 13
+			3, 2, 13
+			4, 2, 13
+			5, 2, 13
+			10, 2, 13
+			11, 2, 13
+			12, 2, 13
+			13, 2, 13
+			7, 3, 13
+			9, 5, 13
+			10, 5, 13
+			11, 5, 13
+			12, 5, 13
+			13, 5, 13
+			1, 8, 13
+			3, 8, 13
+			11, 8, 13
+			12, 8, 13
+			13, 8, 13
+		END
+		# Close gate, remove object
+		SET TILE (0, 6) = 16
+		SET $GATE_X = 0
+		SET $GATE_Y = 6
+		SHOW
+		# ENABLE_TYPE_6
+		SET $MURCIELAGO_ON = 1
+		SOUND 6
+
+		# This now delegates on PLAYER_GETS_COIN! see above.		
+END 

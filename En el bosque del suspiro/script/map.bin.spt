@@ -1,0 +1,86 @@
+ENTERING SCREEN 5
+	IF TRUE
+	THEN
+		DECORATIONS
+			13, 6, 24
+			12, 7, 23
+		END
+	END
+END
+ 
+ENTERING SCREEN 9
+	IF TRUE
+	THEN
+		DECORATIONS
+			7, 2, 25
+			7, 3, 26
+		END
+	END
+END
+ 
+ENTERING SCREEN 12
+	IF TRUE
+	THEN
+		DECORATIONS
+			4, 6, 27
+			7, 6, 25
+			4, 7, 28
+			7, 7, 26
+		END
+	END
+END
+ 
+ENTERING SCREEN 15
+	IF TRUE
+	THEN
+		DECORATIONS
+			0, 3, 16
+			2, 7, 21
+			3, 7, 29
+		END
+	END
+END
+ 
+ENTERING SCREEN 18
+	IF TRUE
+	THEN
+		DECORATIONS
+			14, 3, 16
+			12, 8, 29
+			13, 8, 22
+		END
+	END
+END
+ 
+ENTERING SCREEN 21
+	IF TRUE
+	THEN
+		DECORATIONS
+			3, 2, 19
+			4, 2, 29
+			0, 7, 16
+		END
+	END
+END
+ 
+ENTERING SCREEN 22
+	IF TRUE
+	THEN
+		DECORATIONS
+			12, 2, 29
+			13, 2, 20
+			14, 7, 16
+		END
+	END
+END
+ 
+ 
+// If you use extraprints.h, trim this bit and use it!
+const unsigned char ep_scr_05 [] = { 0xD6, 24, 0xC7, 23 };
+const unsigned char ep_scr_09 [] = { 0x72, 25, 0x73, 26 };
+const unsigned char ep_scr_0C [] = { 0x46, 27, 0x76, 25, 0x47, 28, 0x77, 26 };
+const unsigned char ep_scr_0F [] = { 0x3, 16, 0x27, 21, 0x37, 29 };
+const unsigned char ep_scr_12 [] = { 0xE3, 16, 0xC8, 29, 0xD8, 22 };
+const unsigned char ep_scr_15 [] = { 0x32, 19, 0x42, 29, 0x7, 16 };
+const unsigned char ep_scr_16 [] = { 0xC2, 29, 0xD2, 20, 0xE7, 16 };
+const unsigned char *prints [] = { 0, 0, 0, 0, 0, ep_scr_05, 0, 0, 0, ep_scr_09, 0, 0, ep_scr_0C, 0, 0, ep_scr_0F, 0, 0, ep_scr_12, 0, 0, ep_scr_15, ep_scr_16, 0 };

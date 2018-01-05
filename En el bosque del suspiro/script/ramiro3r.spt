@@ -1,0 +1,558 @@
+# Some flags.
+# Will be using aliases, of course, but I need to keep track of these
+# as they are referenced by number in the engine. So...
+
+# 1  - Crosses counter (crosses = tile get)
+# 2  - 
+# 30 - Kill slowly (Evil Zone in the original) is ON
+# 31 - Fanties Numb flag, Fanties don't move if it's 0
+
+# Externs:
+# 1-30 are reserved by the engine to display level names.
+# 31-N are for game text.
+
+# This game is the most simple of the lot, just collect the 
+# regular mushrooms, beat 4 crypts, and you are done. No
+# contraptions to activate, no nothing. There are four characters
+# to talk to plus the teenages at the beginning.
+
+# Should be easy to implement...
+
+# Some aliases
+
+DEFALIAS
+	# All purpose
+	$ALLPURP				0
+
+	# Crosses (TILE_GET)
+	$CROSSES 				1
+
+	# For a text the first time we enter screen 5
+	$FIRST_TIME				2
+
+	# Ramiro noticing SHROOMs WITH BREASTS
+	$SHROOM_SAYING			3
+
+	# Game state
+	# 0 = NOT TALKED TO THE TEENAGERS
+	# 1 = ALREADY TALKED TO THE TEENAGERS
+	# 2 = ALL MUSHROOMS (NORMAL AND WITH BREASTS) ACQUIRED
+	$GAME_STATE				4
+
+	# Puzzle pieces
+	$SHROOM_PIECES			11
+	$SHROOM_1				12
+	$SHROOM_2				13
+	$SHROOM_3				14
+	$SHROOM_4				15
+
+	# Crypts are open
+	$CRYPT_MACARIA			16
+	$CRYPT_AMADOR			17
+	$CRYPT_ALBERTO			18
+	$CRYPT_DONOSO			19
+
+	# Coordenadas de la compuerta
+	$GATE_X					20
+	$GATE_Y 				21
+
+	# Modify the engine behaviour...
+	$HECHIZO_POSTIZO 		30
+	$MURCIELAGO_ON 			31
+END
+
+# Decorations
+
+INC_DECORATIONS map.bin.spt
+
+# Do
+
+ENTERING GAME
+	IF TRUE
+	THEN
+		# Don't forget to enable CLEAR_FLAGS in config.h!
+
+		# Hechizo postizo is on right from the beginning
+		SET $HECHIZO_POSTIZO = 1
+
+		# Debug
+		# SET $SHROOM_PIECES = 4
+		# SET $HECHIZO_POSTIZO = 1
+		# WARP_TO 8, 4, 4
+	END 
+END
+
+ENTERING ANY
+	# A small aid
+	IF $GAME_STATE <> 2
+	IF $SCHROOM_PIECES = 4
+	IF OBJECT_COUNT = 10
+	THEN
+		SET $GAME_STATE = 2
+	END
+END
+
+PLAYER_GETS_COIN
+	# Whenever you get a CROSS, gain 1 point of life
+	IF TRUE
+	THEN
+		INC LIFE 1
+	END
+
+	# Got all CROSSES?
+	IF $CROSSES = 20
+	THEN
+		SOUND 8
+		# DISABLE_TYPE_6
+		SET $MURCIELAGO_ON = 0
+		SET TILE (#$GATE_X, #$GATE_Y) = 0
+		EXTERN 71
+	END
+
+	IF $CROSSES = 20
+	IF $SHROOM_PIECES = 4
+	IF OBJECT_COUNT = 10
+	THEN
+		SET $GAME_STATE = 2
+		EXTERN 46
+		BREAK
+	END
+
+	IF $CROSSES = 20
+	IF $SHROOM_PIECES = 4
+	THEN
+		EXTERN 47
+		BREAK
+	END
+
+	IF $CROSSES = 20
+	THEN
+		SET $CROSSES = 0
+	END
+END
+
+# Initial screen
+
+ENTERING SCREEN 5
+	IF $FIRST_TIME = 0
+	THEN
+		SET_FIRE_ZONE_TILES 0, 0, 15, 9
+		BREAK
+	END
+END
+
+PRESS_FIRE AT SCREEN 5
+	IF $FIRST_TIME = 0
+	THEN
+		SET $FIRST_TIME = 1
+		EXTERN 26
+		EXTERN 27
+		EXTERN 28
+		EXTERN 45
+		REENTER
+	END
+
+	# Talk to the teenagers
+
+	IF $GAME_STATE = 1
+	IF PLAYER_IN_X_TILES 12, 13
+	THEN
+		# Hurry sucka!
+		EXTERN 72
+		EXTERN 73
+	END
+
+	IF $GAME_STATE = 0
+	IF PLAYER_IN_X_TILES 12, 13
+	THEN
+		# Initial speech
+		EXTERN 29
+		EXTERN 30
+		EXTERN 31
+		EXTERN 32
+		EXTERN 33
+		EXTERN 34
+		EXTERN 35
+		EXTERN 36
+		EXTERN 37
+		EXTERN 38
+		EXTERN 39
+		EXTERN 40
+		EXTERN 41
+		EXTERN 42
+		EXTERN 43
+		SET $GAME_STATE = 1
+	END
+
+	IF $GAME_STATE = 2
+	IF PLAYER_IN_X_TILES 12, 13
+	THEN
+		# TODO: final speech
+		EXTERN 74
+		EXTERN 75
+		EXTERN 76
+		EXTERN 77
+		EXTERN 78
+		EXTERN 79
+		EXTERN 80
+		EXTERN 81
+		EXTERN 82
+		EXTERN 83
+		WIN GAME
+	END
+END
+
+# Crypts
+
+# In entrances: detect interaction with character & talk.
+# In crypts: setup (messages, gate position, etc) & do traps.
+
+# Macaria la Estrafalaria : entrance
+ENTERING SCREEN 15
+	# Crypt is open
+	IF $CRYPT_MACARIA = 1
+	THEN
+		SET TILE (0, 3) = 0
+		SET TILE (3, 7) = 30
+	END
+END
+
+PRESS_FIRE AT SCREEN 15
+	# Open crypt
+	IF $CRYPT_MACARIA = 0
+	IF PLAYER_TOUCHES 3, 7
+	THEN
+		SET TILE (0, 3) = 0
+		SET TILE (3, 7) = 30
+		SET $CRYPT_MACARIA = 1
+		SOUND 8
+		BREAK
+	END
+
+	# Talk to Macaria
+	IF PLAYER_TOUCHES 2, 7
+	THEN
+		EXTERN 48
+		EXTERN 49
+		EXTERN 50
+		EXTERN 51
+		EXTERN 52
+	END
+END
+
+# Macaria la Estrafalaria : crypt
+ENTERING SCREEN 14
+	IF $SHROOM_4 = 0
+	THEN
+		SET TILE (2, 2) = 18
+		SET_FIRE_ZONE_TILES 2, 2, 2, 2
+		EXTERN 70
+	END
+END
+
+PRESS_FIRE AT SCREEN 14
+	IF $SHROOM_4 = 0
+	IF PLAYER_TOUCHES 2, 2
+	THEN
+		SET $CROSSES = 0
+		SET $SHROOM_4 = 1
+		INC $SHROOM_PIECES, 1
+		# SHOW_COINS
+		DECORATIONS
+			11, 3, 13
+			11, 4, 13
+			12, 4, 13
+			11, 5, 13
+			12, 5, 13
+			13, 5, 13
+			11, 6, 13
+			12, 6, 13
+			13, 6, 13
+			11, 7, 13
+			12, 7, 13
+			13, 7, 13
+			1, 8, 13
+			2, 8, 13
+			3, 8, 13
+			4, 8, 13
+			5, 8, 13
+			11, 8, 13
+			12, 8, 13
+			13, 8, 13
+		END
+		# Close gate, remove object
+		SET TILE (14, 3) = 16
+		SET $GATE_X = 14
+		SET $GATE_Y = 3
+		SET TILE (2, 2) = 0
+		SHOW
+		# ENABLE_TYPE_6
+		SET $MURCIELAGO_ON = 1
+		SOUND 6
+
+		# This now delegates on PLAYER_GETS_COIN! see above.
+	END
+END
+
+# Amador el Leñador : entrance
+ENTERING SCREEN 18
+	# Crypt is open
+	IF $CRYPT_AMADOR = 1
+	THEN
+		SET TILE (14, 3) = 0
+		SET TILE (12, 8) = 30
+	END
+END
+
+PRESS_FIRE AT SCREEN 18
+	# Open crypt
+	IF $CRYPT_AMADOR = 0
+	IF PLAYER_TOUCHES 12, 8
+	THEN
+		SET TILE (14, 3) = 0
+		SET TILE (12, 8) = 30
+		SET $CRYPT_AMADOR = 1
+		SOUND 8
+		BREAK
+	END
+
+	# Talk to Amador
+	IF PLAYER_TOUCHES 13, 8
+	THEN
+		EXTERN 53
+		EXTERN 54
+		EXTERN 55
+		EXTERN 56
+		EXTERN 57
+	END
+END
+
+# Amador el Leñador : crypt
+ENTERING SCREEN 19
+	IF $SHROOM_3 = 0
+	THEN
+		SET TILE (1, 5) = 18
+		SET_FIRE_ZONE_TILES 1, 5, 1, 5
+		EXTERN 70
+	END
+END
+
+PRESS_FIRE AT SCREEN 19
+	IF $SHROOM_3 = 0
+	IF PLAYER_TOUCHES 1, 5
+	THEN
+		SET $CROSSES = 0
+		SET $SHROOM_3 = 1
+		INC $SHROOM_PIECES, 1
+		# SHOW_COINS
+		DECORATIONS
+			4, 2, 13
+			5, 2, 13
+			6, 2, 13
+			7, 2, 13
+			8, 2, 13
+			9, 2, 13
+			10, 2, 13
+			11, 2, 13
+			12, 2, 13
+			13, 2, 13
+			4, 5, 13
+			5, 5, 13
+			6, 5, 13
+			7, 5, 13
+			8, 5, 13
+			9, 5, 13
+			10, 5, 13
+			11, 5, 13
+			12, 5, 13
+			13, 5, 13
+		END
+		# Close gate, remove object
+		SET TILE (0, 3) = 16
+		SET $GATE_X = 0
+		SET $GATE_Y = 3
+		SET TILE (1, 5) = 0
+		SHOW
+		# ENABLE_TYPE_6
+		SET $MURCIELAGO_ON = 1
+		SOUND 6
+
+		# This now delegates on PLAYER_GETS_COIN! see above.
+	END
+END
+
+# Alberto el Tuerto : entrance
+ENTERING SCREEN 21
+	# Crypt is open
+	IF $CRYPT_ALBERTO = 1
+	THEN
+		SET TILE (0, 7) = 0
+		SET TILE (4, 2) = 30
+	END
+END
+
+PRESS_FIRE AT SCREEN 21
+	# Open crypt
+	IF $CRYPT_ALBERTO = 0
+	IF PLAYER_TOUCHES 4, 2
+	THEN
+		SET TILE (0, 7) = 0
+		SET TILE (4, 2) = 30
+		SET $CRYPT_ALBERTO = 1
+		SOUND 8
+		BREAK
+	END
+
+	# Talk to Alberto
+	IF PLAYER_TOUCHES 3, 2
+	THEN
+		EXTERN 58
+		EXTERN 59
+		EXTERN 60
+		EXTERN 61
+		EXTERN 62
+		EXTERN 63
+	END
+END
+
+# Alberto el Tuerto : crypt
+ENTERING SCREEN 20
+	IF $SHROOM_2 = 0
+	THEN
+		SET TILE (6, 4) = 18
+		SET_FIRE_ZONE_TILES 6, 4, 6, 4
+		EXTERN 70
+	END
+END
+
+PRESS_FIRE AT SCREEN 20
+	IF $SHROOM_2 = 0
+	IF PLAYER_TOUCHES 6, 4
+	THEN
+		SET $CROSSES = 0
+		SET $SHROOM_2 = 1
+		INC $SHROOM_PIECES, 1
+		# SHOW_COINS
+		DECORATIONS
+			1, 2, 13
+			2, 2, 13
+			3, 2, 13
+			4, 2, 13
+			5, 2, 13
+			9, 2, 13
+			10, 2, 13
+			11, 2, 13
+			12, 2, 13
+			13, 2, 13
+			1, 8, 13
+			2, 8, 13
+			3, 8, 13
+			4, 8, 13
+			5, 8, 13
+			8, 8, 13
+			9, 8, 13
+			10, 8, 13
+			11, 8, 13
+			12, 8, 13
+		END
+		# Close gate, remove object
+		SET TILE (14, 7) = 16
+		SET $GATE_X = 14
+		SET $GATE_Y = 7
+		SET TILE (6, 4) = 0
+		SHOW
+		# ENABLE_TYPE_6
+		SET $MURCIELAGO_ON = 1
+		SOUND 6
+
+		# This now delegates on PLAYER_GETS_COIN! see above.
+	END
+END
+
+# Donoso el Seboso : entrance
+ENTERING SCREEN 22
+	# Crypt is open
+	IF $CRYPT_DONOSO = 1
+	THEN
+		SET TILE (14, 7) = 0
+		SET TILE (12, 2) = 30
+	END
+END
+
+PRESS_FIRE AT SCREEN 22
+	# Open crypt
+	IF $CRYPT_DONOSO = 0
+	IF PLAYER_TOUCHES 12, 2
+	THEN
+		SET TILE (14, 7) = 0
+		SET TILE (12, 2) = 30
+		SET $CRYPT_DONOSO = 1
+		SOUND 8
+		BREAK
+	END
+
+	# Talk to Donoso
+	IF PLAYER_TOUCHES 13, 2
+	THEN
+		EXTERN 64
+		EXTERN 65
+		EXTERN 66
+		EXTERN 67
+		EXTERN 68
+		EXTERN 69
+	END
+END
+
+# Donoso el Seboso : crypt
+ENTERING SCREEN 23
+	IF $SHROOM_1 = 0
+	THEN
+		SET TILE (13, 8) = 18
+		SET_FIRE_ZONE_TILES 13, 8, 13, 8
+		EXTERN 70
+	END
+END
+
+PRESS_FIRE AT SCREEN 23
+	IF $SHROOM_1 = 0
+	IF PLAYER_TOUCHES 13, 8
+	THEN
+		SET $CROSSES = 0
+		SET $SHROOM_1 = 1
+		INC $SHROOM_PIECES, 1
+		# SHOW_COINS
+		DECORATIONS
+			7, 1, 13
+			1, 2, 13
+			2, 2, 13
+			3, 2, 13
+			4, 2, 13
+			5, 2, 13
+			7, 2, 13
+			7, 3, 13
+			9, 3, 13
+			10, 3, 13
+			11, 3, 13
+			12, 3, 13
+			13, 3, 13
+			7, 4, 13
+			7, 5, 13
+			7, 6, 13
+			10, 6, 13
+			11, 6, 13
+			12, 6, 13
+			13, 6, 13
+		END
+		# Close gate, remove object
+		SET TILE (0, 7) = 16
+		SET $GATE_X = 0
+		SET $GATE_Y = 7
+		SET TILE (13, 8) = 0
+		SHOW
+		# ENABLE_TYPE_6
+		SET $MURCIELAGO_ON = 1
+		SOUND 6
+
+		# This now delegates on PLAYER_GETS_COIN! see above.
+	END
+END
